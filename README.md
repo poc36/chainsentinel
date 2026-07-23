@@ -5,6 +5,8 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-green.svg)
 ![React](https://img.shields.io/badge/React-18-61dafb.svg)
 
+![ChainSentinel UI Dashboard Preview](assets/dashboard_preview.png)
+
 ChainSentinel is an enterprise-grade Crypto Anti-Money Laundering (AML) Intelligence Platform designed for professional blockchain investigators, compliance officers, and threat analysts. It provides advanced tools for tracking funds, scoring risks, detecting anomalous behaviors, and generating compliance-ready structural reports (SAR).
 
 Inspired by commercial tools like Chainalysis Reactor and TRM Labs, ChainSentinel is built on a scalable, high-performance tech stack.

@@ -24,7 +24,7 @@ class BaseResponse(BaseModel):
     message: str = "OK"
 
 
-class PaginatedResponse(BaseModel, Generic[T]):  # noqa: UP046
+class PaginatedResponse(BaseModel, Generic[T]):
     """Paginated list response."""
 
     items: list[T]

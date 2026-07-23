@@ -48,12 +48,10 @@ class AddressService:
             ValueError: If address format is invalid or chain unknown.
         """
         # Step 1: Detect chain
-        if chain_hint:
-            chain = Chain(chain_hint)
-        else:
-            chain = detect_chain(address)
-            if chain is None:
-                raise ValueError(f"Could not detect blockchain for address: {address}")
+        detected_chain = Chain(chain_hint) if chain_hint else detect_chain(address)
+        if detected_chain is None:
+            raise ValueError(f"Could not detect blockchain for address: {address}")
+        chain = detected_chain
 
         # Step 2: Validate
         if not validate_address(address, chain):
@@ -160,8 +158,10 @@ class AddressService:
             transactions, key=lambda t: t.block_time or datetime.min.replace(tzinfo=UTC)
         )
         for i in range(len(sorted_txs) - 1):
-            if sorted_txs[i].block_time and sorted_txs[i + 1].block_time:
-                delta = sorted_txs[i + 1].block_time - sorted_txs[i].block_time
+            t1 = sorted_txs[i].block_time
+            t2 = sorted_txs[i + 1].block_time
+            if t1 is not None and t2 is not None:
+                delta = t2 - t1
                 holding_times.append(delta.total_seconds() / 3600)
 
         avg_holding = (

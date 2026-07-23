@@ -13,6 +13,10 @@ def anyio_backend():
 @pytest.fixture
 async def app():
     """Create a test app instance with mocked infrastructure."""
+    # Explicitly import submodules first to ensure they are registered in app.core
+    import app.core.database
+    import app.core.redis
+
     # Patch heavy infrastructure before importing app
     with (
         patch("app.core.database.engine") as mock_engine,

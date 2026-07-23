@@ -224,7 +224,7 @@ class MLEngine:
         if not values:
             return 0.0
 
-        counter = {}
+        counter: dict[int, int] = {}
         for v in values:
             counter[v] = counter.get(v, 0) + 1
 

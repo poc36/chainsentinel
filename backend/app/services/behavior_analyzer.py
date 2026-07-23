@@ -269,10 +269,11 @@ class BehaviorAnalyzer:
         if not incoming:
             return 0.0
 
-        sender_volumes: Counter[str] = Counter()
+        sender_volumes: dict[str, float] = {}
         total = Decimal("0")
         for tx in incoming:
-            sender_volumes[tx.from_address.lower()] += float(tx.amount_usd)  # type: ignore[operator]
+            addr = tx.from_address.lower()
+            sender_volumes[addr] = sender_volumes.get(addr, 0.0) + float(tx.amount_usd)
             total += tx.amount_usd
 
         if total == 0:

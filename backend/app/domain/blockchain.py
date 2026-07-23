@@ -180,11 +180,19 @@ def detect_chain(address: str) -> Chain | None:
         return Chain.DOGECOIN
 
     # EVM chains: 0x prefix — default to Ethereum
-    if address.startswith("0x") and len(address) == 42 and validate_address(address, Chain.ETHEREUM):
+    if (
+        address.startswith("0x")
+        and len(address) == 42
+        and validate_address(address, Chain.ETHEREUM)
+    ):
         return Chain.ETHEREUM
 
     # Solana: base58, 32-44 chars (checked last)
-    if 32 <= len(address) <= 44 and not address.startswith("0x") and validate_address(address, Chain.SOLANA):
+    if (
+        32 <= len(address) <= 44
+        and not address.startswith("0x")
+        and validate_address(address, Chain.SOLANA)
+    ):
         return Chain.SOLANA
 
     return None

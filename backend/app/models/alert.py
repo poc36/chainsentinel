@@ -1,7 +1,7 @@
 """Alert model for risk-based notifications."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSON, UUID
@@ -30,34 +30,22 @@ class Alert(Base):
 
     __tablename__ = "alerts"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     address_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("addresses.id"), nullable=True
     )
-    alert_type: Mapped[str] = mapped_column(
-        String(100), nullable=False, index=True
-    )
-    severity: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="medium", index=True
-    )
+    alert_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     is_resolved: Mapped[bool] = mapped_column(Boolean, default=False)
-    resolved_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
-    resolved_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    alert_metadata: Mapped[dict | None] = mapped_column(
-        "metadata", JSON, nullable=True
-    )
+    resolved_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    alert_metadata: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         index=True,
     )
 

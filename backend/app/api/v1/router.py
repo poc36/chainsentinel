@@ -2,12 +2,12 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.auth import router as auth_router
 from app.api.v1.addresses import router as addresses_router
+from app.api.v1.ai import router as ai_router
+from app.api.v1.auth import router as auth_router
+from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.graph import router as graph_router
 from app.api.v1.risk import router as risk_router
-from app.api.v1.dashboard import router as dashboard_router
-from app.api.v1.ai import router as ai_router
 from app.api.v1.users import router as users_router
 
 api_router = APIRouter()

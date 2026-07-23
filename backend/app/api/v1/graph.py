@@ -2,13 +2,13 @@
 
 from fastapi import APIRouter, HTTPException
 
-from app.services.graph_service import GraphService
 from app.schemas.graph import (
     GraphBuildRequest,
     GraphData,
     GraphExpandRequest,
     GraphPathRequest,
 )
+from app.services.graph_service import GraphService
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ async def build_graph(request: GraphBuildRequest) -> GraphData:
         service = GraphService()
         return await service.build_graph(request)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/expand", response_model=GraphData)
@@ -30,7 +30,7 @@ async def expand_graph_node(request: GraphExpandRequest) -> GraphData:
         service = GraphService()
         return await service.expand_node(request)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/path", response_model=GraphData)
@@ -40,4 +40,4 @@ async def find_graph_path(request: GraphPathRequest) -> GraphData:
         service = GraphService()
         return await service.find_path(request)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e

@@ -4,16 +4,16 @@ from fastapi import APIRouter, HTTPException
 
 from app.domain.blockchain import Chain, detect_chain
 from app.providers.factory import get_provider
-from app.services.address_service import AddressService
-from app.services.risk_engine import RiskEngine
-from app.services.behavior_analyzer import BehaviorAnalyzer
-from app.services.ml_engine import MLEngine
 from app.schemas.address import (
     AddressAnalyzeRequest,
     AddressFullAnalysis,
     AddressProfileResponse,
     TransactionResponse,
 )
+from app.services.address_service import AddressService
+from app.services.behavior_analyzer import BehaviorAnalyzer
+from app.services.ml_engine import MLEngine
+from app.services.risk_engine import RiskEngine
 
 router = APIRouter()
 
@@ -68,12 +68,12 @@ async def analyze_address(request: AddressAnalyzeRequest) -> AddressFullAnalysis
         )
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Analysis failed: {str(e)}",
-        )
+            detail=f"Analysis failed: {e!s}",
+        ) from e
 
 
 @router.get("/{address}/profile", response_model=AddressProfileResponse)
@@ -83,7 +83,7 @@ async def get_address_profile(address: str, chain: str | None = None) -> Address
         service = AddressService()
         return await service.analyze(address=address, chain_hint=chain)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/{address}/transactions", response_model=list[TransactionResponse])
@@ -100,7 +100,5 @@ async def get_address_transactions(
 
     provider = get_provider()
     service = AddressService()
-    raw_txs = await provider.get_transactions(
-        address, detected_chain, limit=limit, offset=offset
-    )
+    raw_txs = await provider.get_transactions(address, detected_chain, limit=limit, offset=offset)
     return service.transactions_to_response(raw_txs)

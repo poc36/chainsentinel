@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 
 from app.api.deps import CurrentUser, DbSession
+from app.config import get_settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -19,7 +20,6 @@ from app.schemas.auth import (
     UserLogin,
     UserResponse,
 )
-from app.config import get_settings
 
 router = APIRouter()
 settings = get_settings()
@@ -95,7 +95,7 @@ async def refresh_token(data: TokenRefresh, db: DbSession) -> dict:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
-        )
+        ) from None
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()

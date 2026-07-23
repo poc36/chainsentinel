@@ -1,16 +1,15 @@
 """Machine Learning anomaly detection and clustering engine."""
 
 import hashlib
-from typing import Any
 
 import numpy as np
-from sklearn.ensemble import IsolationForest
 from sklearn.cluster import DBSCAN
+from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 
+from app.core.logging import get_logger
 from app.providers.base import ProviderTransaction
 from app.schemas.address import MLAnalysisResponse
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -94,12 +93,11 @@ class MLEngine:
 
         amounts = [float(t.amount_usd) for t in transactions if float(t.amount_usd) > 0]
         in_amounts = [float(t.amount_usd) for t in incoming if float(t.amount_usd) > 0]
-        out_amounts = [float(t.amount_usd) for t in outgoing if float(t.amount_usd) > 0]
 
         # Volume features
         total_volume = sum(amounts) if amounts else 0.0
-        avg_amount = np.mean(amounts) if amounts else 0.0
-        std_amount = float(np.std(amounts)) if len(amounts) > 1 else 0.0
+        avg_amount: float = float(np.mean(amounts)) if amounts else 0.0
+        std_amount: float = float(np.std(amounts)) if len(amounts) > 1 else 0.0
         max_amount = max(amounts) if amounts else 0.0
         min_amount = min(amounts) if amounts else 0.0
 
@@ -129,15 +127,13 @@ class MLEngine:
             ).total_seconds()
             intervals.append(delta)
 
-        avg_interval = np.mean(intervals) if intervals else 0.0
-        std_interval = float(np.std(intervals)) if len(intervals) > 1 else 0.0
-        regularity = (
-            1 - (std_interval / avg_interval) if avg_interval > 0 else 0.0
-        )
+        avg_interval: float = float(np.mean(intervals)) if intervals else 0.0
+        std_interval: float = float(np.std(intervals)) if len(intervals) > 1 else 0.0
+        regularity = 1 - (std_interval / avg_interval) if avg_interval > 0 else 0.0
         regularity = max(0.0, min(1.0, regularity))
 
         # Amount coefficient of variation
-        cv = std_amount / avg_amount if avg_amount > 0 else 0.0
+        cv: float = std_amount / avg_amount if avg_amount > 0 else 0.0
 
         return {
             "total_volume": round(total_volume, 2),
@@ -186,9 +182,7 @@ class MLEngine:
             logger.warning("ml_anomaly_detection_error", error=str(e))
             return 0.0, False
 
-    def _cluster_address(
-        self, features: dict[str, float]
-    ) -> tuple[str | None, str | None]:
+    def _cluster_address(self, features: dict[str, float]) -> tuple[str | None, str | None]:
         """Assign address to a behavioral cluster."""
         # Deterministic cluster assignment based on feature profile
         total_volume = features.get("total_volume", 0)
@@ -215,9 +209,7 @@ class MLEngine:
 
         In demo mode, returns deterministic pseudo-addresses.
         """
-        fingerprint = hashlib.md5(
-            str(sorted(features.items())).encode()
-        ).hexdigest()
+        fingerprint = hashlib.md5(str(sorted(features.items())).encode()).hexdigest()
 
         similar: list[str] = []
         for i in range(3):

@@ -4,8 +4,8 @@ from fastapi import APIRouter, HTTPException
 
 from app.domain.blockchain import Chain, detect_chain
 from app.providers.factory import get_provider
-from app.services.risk_engine import RiskEngine
 from app.schemas.address import RiskScoreResponse
+from app.services.risk_engine import RiskEngine
 
 router = APIRouter()
 

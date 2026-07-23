@@ -1,12 +1,13 @@
 """Behavioral analysis service — pattern recognition and anomaly detection."""
 
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from collections import Counter
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+from typing import Any
 
+from app.core.logging import get_logger
 from app.providers.base import ProviderTransaction
 from app.schemas.address import BehaviorAnalysisResponse, BehaviorFlag
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -46,35 +47,41 @@ class BehaviorAnalyzer:
         # 1. Anomalous transfers
         anomalous_count = self._detect_anomalous_transfers(transactions)
         if anomalous_count > 0:
-            flags.append(BehaviorFlag(
-                code="ANOMALOUS_TRANSFERS",
-                name="Anomalous Transfers",
-                severity="medium",
-                description=f"{anomalous_count} transfers deviate significantly from average",
-                evidence={"count": anomalous_count},
-            ))
+            flags.append(
+                BehaviorFlag(
+                    code="ANOMALOUS_TRANSFERS",
+                    name="Anomalous Transfers",
+                    severity="medium",
+                    description=f"{anomalous_count} transfers deviate significantly from average",
+                    evidence={"count": anomalous_count},
+                )
+            )
 
         # 2. Repeating patterns
         patterns = self._detect_repeating_patterns(transactions)
         if patterns:
-            flags.append(BehaviorFlag(
-                code="REPEATING_PATTERNS",
-                name="Repeating Transaction Patterns",
-                severity="medium",
-                description=f"Detected {len(patterns)} repeating patterns",
-                evidence={"patterns": patterns},
-            ))
+            flags.append(
+                BehaviorFlag(
+                    code="REPEATING_PATTERNS",
+                    name="Repeating Transaction Patterns",
+                    severity="medium",
+                    description=f"Detected {len(patterns)} repeating patterns",
+                    evidence={"patterns": patterns},
+                )
+            )
 
         # 3. Unusual timing
         unusual_timing = self._detect_unusual_timing(transactions)
         if unusual_timing:
-            flags.append(BehaviorFlag(
-                code="UNUSUAL_TIMING",
-                name="Unusual Activity Timing",
-                severity="low",
-                description="Majority of activity during unusual hours (midnight-5am UTC)",
-                evidence={"night_percentage": unusual_timing},
-            ))
+            flags.append(
+                BehaviorFlag(
+                    code="UNUSUAL_TIMING",
+                    name="Unusual Activity Timing",
+                    severity="low",
+                    description="Majority of activity during unusual hours (midnight-5am UTC)",
+                    evidence={"night_percentage": unusual_timing},
+                )
+            )
 
         # 4. New counterparties
         new_cp_count = self._count_new_counterparties(address, transactions)
@@ -82,24 +89,28 @@ class BehaviorAnalyzer:
         # 5. Suspicious splitting
         suspicious_split = self._detect_splitting(outgoing)
         if suspicious_split:
-            flags.append(BehaviorFlag(
-                code="SUSPICIOUS_SPLITTING",
-                name="Suspicious Fund Splitting",
-                severity="high",
-                description="Large incoming amounts immediately split into smaller outgoing txs",
-                evidence=suspicious_split,
-            ))
+            flags.append(
+                BehaviorFlag(
+                    code="SUSPICIOUS_SPLITTING",
+                    name="Suspicious Fund Splitting",
+                    severity="high",
+                    description="Large incoming amounts immediately split into smaller outgoing txs",
+                    evidence=suspicious_split,
+                )
+            )
 
         # 6. Rapid withdrawal
         rapid = self._detect_rapid_withdrawal(incoming, outgoing)
         if rapid:
-            flags.append(BehaviorFlag(
-                code="RAPID_WITHDRAWAL",
-                name="Rapid Fund Withdrawal",
-                severity="high",
-                description="Funds withdrawn within minutes of receipt",
-                evidence=rapid,
-            ))
+            flags.append(
+                BehaviorFlag(
+                    code="RAPID_WITHDRAWAL",
+                    name="Rapid Fund Withdrawal",
+                    severity="high",
+                    description="Funds withdrawn within minutes of receipt",
+                    evidence=rapid,
+                )
+            )
 
         # 7. Fund concentration
         concentration = self._calculate_concentration(incoming)
@@ -107,12 +118,14 @@ class BehaviorAnalyzer:
         # 8. Exchange-like behavior
         probable_exchange = self._detect_exchange_behavior(incoming, outgoing)
         if probable_exchange:
-            flags.append(BehaviorFlag(
-                code="EXCHANGE_BEHAVIOR",
-                name="Exchange-like Behavior",
-                severity="low",
-                description="Activity pattern resembles a centralized exchange",
-            ))
+            flags.append(
+                BehaviorFlag(
+                    code="EXCHANGE_BEHAVIOR",
+                    name="Exchange-like Behavior",
+                    severity="low",
+                    description="Activity pattern resembles a centralized exchange",
+                )
+            )
 
         # 9. Same owner probability
         same_owner_prob = self._estimate_same_owner(transactions)
@@ -131,9 +144,7 @@ class BehaviorAnalyzer:
             same_owner_probability=same_owner_prob,
         )
 
-    def _detect_anomalous_transfers(
-        self, transactions: list[ProviderTransaction]
-    ) -> int:
+    def _detect_anomalous_transfers(self, transactions: list[ProviderTransaction]) -> int:
         """Count transactions that deviate >3x from mean."""
         amounts = [float(t.amount_usd) for t in transactions if t.amount_usd > 0]
         if len(amounts) < 5:
@@ -143,9 +154,7 @@ class BehaviorAnalyzer:
             return 0
         return sum(1 for a in amounts if a > avg * 3 or a < avg * 0.1)
 
-    def _detect_repeating_patterns(
-        self, transactions: list[ProviderTransaction]
-    ) -> list[str]:
+    def _detect_repeating_patterns(self, transactions: list[ProviderTransaction]) -> list[str]:
         """Detect repeating amount/timing patterns."""
         patterns: list[str] = []
 
@@ -172,18 +181,14 @@ class BehaviorAnalyzer:
 
             if intervals:
                 avg_interval = sum(intervals) / len(intervals)
-                consistent = sum(
-                    1 for i in intervals if abs(i - avg_interval) < avg_interval * 0.3
-                )
+                consistent = sum(1 for i in intervals if abs(i - avg_interval) < avg_interval * 0.3)
                 if consistent > len(intervals) * 0.6 and avg_interval > 60:
                     hours = avg_interval / 3600
                     patterns.append(f"Regular interval pattern (~{hours:.1f}h between txs)")
 
         return patterns
 
-    def _detect_unusual_timing(
-        self, transactions: list[ProviderTransaction]
-    ) -> float:
+    def _detect_unusual_timing(self, transactions: list[ProviderTransaction]) -> float:
         """Return percentage of transactions occurring during unusual hours."""
         timed_txs = [t for t in transactions if t.block_time]
         if not timed_txs:
@@ -197,7 +202,7 @@ class BehaviorAnalyzer:
     ) -> int:
         """Count counterparties appearing only in the last 7 days."""
         addr_lower = address.lower()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - timedelta(days=7)
 
         recent_cps: set[str] = set()
@@ -212,9 +217,7 @@ class BehaviorAnalyzer:
 
         return len(recent_cps - old_cps)
 
-    def _detect_splitting(
-        self, outgoing: list[ProviderTransaction]
-    ) -> dict | None:
+    def _detect_splitting(self, outgoing: list[ProviderTransaction]) -> dict[str, Any] | None:
         """Detect fund splitting patterns."""
         if len(outgoing) < 4:
             return None
@@ -226,7 +229,7 @@ class BehaviorAnalyzer:
 
         # Look for burst of outgoing txs within 1 hour
         for i in range(len(sorted_out) - 3):
-            window = sorted_out[i: i + 4]
+            window = sorted_out[i : i + 4]
             if window[-1].block_time and window[0].block_time:
                 time_span = (window[-1].block_time - window[0].block_time).total_seconds()
                 if time_span < 3600:
@@ -244,7 +247,7 @@ class BehaviorAnalyzer:
         self,
         incoming: list[ProviderTransaction],
         outgoing: list[ProviderTransaction],
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         """Detect funds being withdrawn quickly after receipt."""
         for tx_in in incoming:
             if not tx_in.block_time or tx_in.amount_usd < 100:
@@ -261,9 +264,7 @@ class BehaviorAnalyzer:
                     }
         return None
 
-    def _calculate_concentration(
-        self, incoming: list[ProviderTransaction]
-    ) -> float:
+    def _calculate_concentration(self, incoming: list[ProviderTransaction]) -> float:
         """Calculate Herfindahl-Hirschman Index for sender concentration."""
         if not incoming:
             return 0.0
@@ -271,7 +272,7 @@ class BehaviorAnalyzer:
         sender_volumes: Counter[str] = Counter()
         total = Decimal("0")
         for tx in incoming:
-            sender_volumes[tx.from_address.lower()] += float(tx.amount_usd)
+            sender_volumes[tx.from_address.lower()] += float(tx.amount_usd)  # type: ignore[operator]
             total += tx.amount_usd
 
         if total == 0:
@@ -295,9 +296,7 @@ class BehaviorAnalyzer:
 
         return unique_senders > 15 and unique_receivers > 15
 
-    def _estimate_same_owner(
-        self, transactions: list[ProviderTransaction]
-    ) -> float:
+    def _estimate_same_owner(self, transactions: list[ProviderTransaction]) -> float:
         """Estimate probability that counterparties belong to the same owner."""
         if len(transactions) < 3:
             return 0.0
@@ -316,9 +315,7 @@ class BehaviorAnalyzer:
 
         return 0.1
 
-    def _estimate_cluster_size(
-        self, transactions: list[ProviderTransaction]
-    ) -> int:
+    def _estimate_cluster_size(self, transactions: list[ProviderTransaction]) -> int:
         """Estimate address cluster size from transaction patterns."""
         addresses: set[str] = set()
         for tx in transactions:

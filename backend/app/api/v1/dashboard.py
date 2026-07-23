@@ -2,8 +2,8 @@
 
 from fastapi import APIRouter
 
-from app.services.dashboard_service import DashboardService
 from app.schemas.report import DashboardData
+from app.services.dashboard_service import DashboardService
 
 router = APIRouter()
 

@@ -6,8 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ---- Report schemas ----
+
 
 class ReportGenerateRequest(BaseModel):
     """Request to generate a report."""
@@ -31,6 +31,7 @@ class ReportResponse(BaseModel):
 
 
 # ---- Dashboard schemas ----
+
 
 class DashboardStats(BaseModel):
     """Overview statistics for the dashboard."""
@@ -95,6 +96,7 @@ class DashboardData(BaseModel):
 
 
 # ---- AI schemas ----
+
 
 class AIChatRequest(BaseModel):
     """Request for AI investigator chat."""

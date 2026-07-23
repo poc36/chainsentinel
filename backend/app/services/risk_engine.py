@@ -5,19 +5,16 @@ Evaluates addresses against 30+ risk factors to compute a weighted risk score.
 
 from decimal import Decimal
 
+from app.core.logging import get_logger
+from app.domain.address_classifier import KNOWN_MIXERS, classify_address
 from app.domain.blockchain import Chain
 from app.domain.risk_factors import (
     RISK_FACTORS,
-    RiskCategory,
-    RiskFactor,
     calculate_risk_level,
-    get_risk_color,
 )
 from app.domain.sanctions import get_sanctions_checker
-from app.domain.address_classifier import classify_address, KNOWN_MIXERS
 from app.providers.base import ProviderTransaction
 from app.schemas.address import RiskFactorScore, RiskScoreResponse
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -101,16 +98,18 @@ class RiskEngine:
             factor = RISK_FACTORS["OFAC"]
             confidence = min(0.8, len(cp_sanctions) * 0.2)
             score_val = factor.weight * confidence
-            factor_scores.append(RiskFactorScore(
-                code="OFAC_INDIRECT",
-                name="Indirect Sanctions Exposure",
-                category=factor.category,
-                weight=factor.weight * 0.7,
-                score=score_val * 0.7,
-                confidence=confidence,
-                description=f"Transacted with {len(cp_sanctions)} sanctioned address(es)",
-                triggered=True,
-            ))
+            factor_scores.append(
+                RiskFactorScore(
+                    code="OFAC_INDIRECT",
+                    name="Indirect Sanctions Exposure",
+                    category=factor.category,
+                    weight=factor.weight * 0.7,
+                    score=score_val * 0.7,
+                    confidence=confidence,
+                    description=f"Transacted with {len(cp_sanctions)} sanctioned address(es)",
+                    triggered=True,
+                )
+            )
             total_weighted_score += score_val * 0.7
             explanations.append(
                 f"⚠️ Indirect sanctions exposure: {len(cp_sanctions)} counterparties "
@@ -147,7 +146,7 @@ class RiskEngine:
             factor_scores.append(type_score)
             total_weighted_score += type_score.score
             if type_score.triggered:
-                explanations.append(f"ℹ️ {type_score.name}: {type_score.description}")
+                explanations.append(f"[i] {type_score.name}: {type_score.description}")
 
         # --- Normalize to 0-100 ---
         overall_score = min(100, int((total_weighted_score / self.max_weighted_score) * 100))
@@ -195,7 +194,8 @@ class RiskEngine:
         """Check for mixer/Tornado Cash interaction."""
         mixer_addresses = set(KNOWN_MIXERS.keys())
         mixer_txs = [
-            tx for tx in transactions
+            tx
+            for tx in transactions
             if (
                 tx.from_address.lower() in mixer_addresses
                 or tx.to_address.lower() in mixer_addresses
@@ -258,44 +258,60 @@ class RiskEngine:
         if unique_senders > 10:
             factor = RISK_FACTORS["FAN_IN"]
             confidence = min(1.0, unique_senders / 30)
-            scores.append(RiskFactorScore(
-                code=factor.code, name=factor.name, category=factor.category,
-                weight=factor.weight, score=factor.weight * confidence,
-                confidence=confidence,
-                description=f"{unique_senders} unique senders detected (consolidation pattern)",
-                triggered=True,
-            ))
+            scores.append(
+                RiskFactorScore(
+                    code=factor.code,
+                    name=factor.name,
+                    category=factor.category,
+                    weight=factor.weight,
+                    score=factor.weight * confidence,
+                    confidence=confidence,
+                    description=f"{unique_senders} unique senders detected (consolidation pattern)",
+                    triggered=True,
+                )
+            )
 
         # Fan-Out detection (many receivers)
         unique_receivers = len(set(t.to_address.lower() for t in outgoing))
         if unique_receivers > 10:
             factor = RISK_FACTORS["FAN_OUT"]
             confidence = min(1.0, unique_receivers / 30)
-            scores.append(RiskFactorScore(
-                code=factor.code, name=factor.name, category=factor.category,
-                weight=factor.weight, score=factor.weight * confidence,
-                confidence=confidence,
-                description=f"{unique_receivers} unique recipients (distribution pattern)",
-                triggered=True,
-            ))
+            scores.append(
+                RiskFactorScore(
+                    code=factor.code,
+                    name=factor.name,
+                    category=factor.category,
+                    weight=factor.weight,
+                    score=factor.weight * confidence,
+                    confidence=confidence,
+                    description=f"{unique_receivers} unique recipients (distribution pattern)",
+                    triggered=True,
+                )
+            )
 
         # Rapid Movement detection
         for tx_in in incoming:
             if tx_in.block_time:
                 quick_outs = [
-                    tx for tx in outgoing
+                    tx
+                    for tx in outgoing
                     if tx.block_time
                     and 0 < (tx.block_time - tx_in.block_time).total_seconds() < 3600
                 ]
                 if quick_outs:
                     factor = RISK_FACTORS["RAPID_MOVEMENT"]
-                    scores.append(RiskFactorScore(
-                        code=factor.code, name=factor.name, category=factor.category,
-                        weight=factor.weight, score=factor.weight * 0.8,
-                        confidence=0.8,
-                        description="Funds forwarded within 1 hour of receipt",
-                        triggered=True,
-                    ))
+                    scores.append(
+                        RiskFactorScore(
+                            code=factor.code,
+                            name=factor.name,
+                            category=factor.category,
+                            weight=factor.weight,
+                            score=factor.weight * 0.8,
+                            confidence=0.8,
+                            description="Funds forwarded within 1 hour of receipt",
+                            triggered=True,
+                        )
+                    )
                     break
 
         # Smurfing detection (many similar-sized transactions)
@@ -308,31 +324,42 @@ class RiskEngine:
                     if similar > len(amounts) * 0.6:
                         factor = RISK_FACTORS["SMURFING"]
                         confidence = similar / len(amounts)
-                        scores.append(RiskFactorScore(
-                            code=factor.code, name=factor.name, category=factor.category,
-                            weight=factor.weight, score=factor.weight * confidence,
-                            confidence=confidence,
-                            description=(
-                                f"{similar}/{len(amounts)} outgoing txs have similar amounts "
-                                f"(~${avg_amount:.0f}) — possible structuring"
-                            ),
-                            triggered=True,
-                        ))
+                        scores.append(
+                            RiskFactorScore(
+                                code=factor.code,
+                                name=factor.name,
+                                category=factor.category,
+                                weight=factor.weight,
+                                score=factor.weight * confidence,
+                                confidence=confidence,
+                                description=(
+                                    f"{similar}/{len(amounts)} outgoing txs have similar amounts "
+                                    f"(~${avg_amount:.0f}) — possible structuring"
+                                ),
+                                triggered=True,
+                            )
+                        )
 
         # Self Transfer
         self_txs = [
-            t for t in transactions
+            t
+            for t in transactions
             if t.from_address.lower() == addr_lower and t.to_address.lower() == addr_lower
         ]
         if self_txs:
             factor = RISK_FACTORS["SELF_TRANSFER"]
-            scores.append(RiskFactorScore(
-                code=factor.code, name=factor.name, category=factor.category,
-                weight=factor.weight, score=factor.weight * 0.6,
-                confidence=0.6,
-                description=f"{len(self_txs)} self-transfer transactions detected",
-                triggered=True,
-            ))
+            scores.append(
+                RiskFactorScore(
+                    code=factor.code,
+                    name=factor.name,
+                    category=factor.category,
+                    weight=factor.weight,
+                    score=factor.weight * 0.6,
+                    confidence=0.6,
+                    description=f"{len(self_txs)} self-transfer transactions detected",
+                    triggered=True,
+                )
+            )
 
         return scores
 
@@ -352,25 +379,35 @@ class RiskEngine:
         if len(dust_txs) > 5:
             factor = RISK_FACTORS["DUSTING"]
             confidence = min(1.0, len(dust_txs) / 20)
-            scores.append(RiskFactorScore(
-                code=factor.code, name=factor.name, category=factor.category,
-                weight=factor.weight, score=factor.weight * confidence,
-                confidence=confidence,
-                description=f"{len(dust_txs)} dust transactions (< $0.50) received",
-                triggered=True,
-            ))
+            scores.append(
+                RiskFactorScore(
+                    code=factor.code,
+                    name=factor.name,
+                    category=factor.category,
+                    weight=factor.weight,
+                    score=factor.weight * confidence,
+                    confidence=confidence,
+                    description=f"{len(dust_txs)} dust transactions (< $0.50) received",
+                    triggered=True,
+                )
+            )
 
         # Whale detection
         whale_txs = [t for t in transactions if t.amount_usd > Decimal("100000")]
         if whale_txs:
             factor = RISK_FACTORS["WHALE"]
-            scores.append(RiskFactorScore(
-                code=factor.code, name=factor.name, category=factor.category,
-                weight=factor.weight, score=factor.weight * 0.5,
-                confidence=0.5,
-                description=f"{len(whale_txs)} transactions exceed $100,000",
-                triggered=True,
-            ))
+            scores.append(
+                RiskFactorScore(
+                    code=factor.code,
+                    name=factor.name,
+                    category=factor.category,
+                    weight=factor.weight,
+                    score=factor.weight * 0.5,
+                    confidence=0.5,
+                    description=f"{len(whale_txs)} transactions exceed $100,000",
+                    triggered=True,
+                )
+            )
 
         return scores
 
@@ -379,8 +416,11 @@ class RiskEngine:
         if address_type == "mixer":
             factor = RISK_FACTORS["MIXER"]
             return RiskFactorScore(
-                code="TYPE_MIXER", name="Mixer Address", category=factor.category,
-                weight=factor.weight, score=factor.weight * 0.95,
+                code="TYPE_MIXER",
+                name="Mixer Address",
+                category=factor.category,
+                weight=factor.weight,
+                score=factor.weight * 0.95,
                 confidence=0.95,
                 description="Address classified as a known mixing service",
                 triggered=True,
@@ -389,8 +429,11 @@ class RiskEngine:
         if address_type == "exchange":
             factor = RISK_FACTORS["HIGH_RISK_EXCHANGE"]
             return RiskFactorScore(
-                code="TYPE_EXCHANGE", name="Exchange Address", category=factor.category,
-                weight=2.0, score=1.0,
+                code="TYPE_EXCHANGE",
+                name="Exchange Address",
+                category=factor.category,
+                weight=2.0,
+                score=1.0,
                 confidence=0.95,
                 description="Address classified as a cryptocurrency exchange",
                 triggered=False,

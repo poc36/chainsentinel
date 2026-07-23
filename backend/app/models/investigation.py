@@ -1,12 +1,17 @@
 """Investigation model for managing AML case investigations."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
-    Boolean, DateTime, ForeignKey, Integer, String, Text,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSON, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -33,32 +38,26 @@ class Investigation(Base):
 
     __tablename__ = "investigations"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="open", index=True
-    )
-    priority: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="medium"
-    )
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     is_favorite: Mapped[bool] = mapped_column(Boolean, default=False)
     version: Mapped[int] = mapped_column(Integer, default=1)
     findings: Mapped[str | None] = mapped_column(Text, nullable=True)
     conclusion: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # Relationships
@@ -67,8 +66,10 @@ class Investigation(Base):
         "InvestigationAddress", back_populates="investigation", lazy="selectin"
     )
     comments = relationship(
-        "Comment", back_populates="investigation", lazy="selectin",
-        order_by="Comment.created_at.desc()"
+        "Comment",
+        back_populates="investigation",
+        lazy="selectin",
+        order_by="Comment.created_at.desc()",
     )
     reports = relationship("Report", back_populates="investigation", lazy="selectin")
 
@@ -90,9 +91,7 @@ class InvestigationAddress(Base):
 
     __tablename__ = "investigation_addresses"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     investigation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("investigations.id"), nullable=False
     )
@@ -102,7 +101,7 @@ class InvestigationAddress(Base):
     role: Mapped[str] = mapped_column(String(50), default="subject")
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     added_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships
@@ -123,9 +122,7 @@ class Comment(Base):
 
     __tablename__ = "comments"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     investigation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("investigations.id"), nullable=False
     )
@@ -134,7 +131,7 @@ class Comment(Base):
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships

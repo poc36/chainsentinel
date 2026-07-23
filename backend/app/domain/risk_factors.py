@@ -81,7 +81,6 @@ RISK_FACTORS: dict[str, RiskFactor] = {
         weight=10.0,
         indicators=["Listed on OFSI", "Connected to UK-sanctioned entity"],
     ),
-
     # ---- Mixers & Privacy ----
     "TORNADO_CASH": RiskFactor(
         code="TORNADO_CASH",
@@ -128,7 +127,6 @@ RISK_FACTORS: dict[str, RiskFactor] = {
         weight=2.0,
         indicators=["Frequent swaps", "Large volume through DEX"],
     ),
-
     # ---- Illicit Activity ----
     "DARKNET": RiskFactor(
         code="DARKNET",
@@ -202,7 +200,6 @@ RISK_FACTORS: dict[str, RiskFactor] = {
         weight=7.0,
         indicators=["No-KYC exchange usage", "Weak compliance exchange"],
     ),
-
     # ---- Structural Patterns ----
     "P2P": RiskFactor(
         code="P2P",
@@ -240,7 +237,6 @@ RISK_FACTORS: dict[str, RiskFactor] = {
         weight=2.0,
         indicators=["Same-entity transfers", "Wallet consolidation"],
     ),
-
     # ---- Behavioral Patterns ----
     "LAYERING": RiskFactor(
         code="LAYERING",

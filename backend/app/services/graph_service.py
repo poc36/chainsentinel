@@ -1,22 +1,21 @@
 """Graph service for building and querying transaction graphs."""
 
 import hashlib
-from datetime import datetime
 
-from app.domain.blockchain import Chain, detect_chain
+from app.core.logging import get_logger
 from app.domain.address_classifier import classify_address
-from app.domain.risk_factors import get_risk_color, calculate_risk_level
+from app.domain.blockchain import Chain, detect_chain
+from app.domain.risk_factors import calculate_risk_level, get_risk_color
 from app.providers.base import ProviderTransaction
 from app.providers.factory import get_provider
 from app.schemas.graph import (
+    GraphBuildRequest,
     GraphData,
     GraphEdge,
-    GraphNode,
-    GraphBuildRequest,
     GraphExpandRequest,
+    GraphNode,
     GraphPathRequest,
 )
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -69,9 +68,7 @@ class GraphService:
             for tx in transactions:
                 # Add counterparty nodes
                 counterparty = (
-                    tx.to_address
-                    if tx.from_address.lower() == addr.lower()
-                    else tx.from_address
+                    tx.to_address if tx.from_address.lower() == addr.lower() else tx.from_address
                 )
 
                 if counterparty.lower() not in nodes:
@@ -160,7 +157,6 @@ class GraphService:
             GraphData representing the path.
         """
         chain = Chain(request.chain) if request.chain else Chain.ETHEREUM
-        provider = get_provider()
 
         # Generate path via BFS (simplified for demo)
         nodes: dict[str, GraphNode] = {}
@@ -171,9 +167,7 @@ class GraphService:
         path_addresses = [request.source]
 
         for i in range(path_length - 1):
-            seed = hashlib.sha256(
-                f"{request.source}{request.target}{i}".encode()
-            ).hexdigest()
+            seed = hashlib.sha256(f"{request.source}{request.target}{i}".encode()).hexdigest()
             intermediate = f"0x{seed[:40]}"
             path_addresses.append(intermediate)
 
@@ -187,15 +181,17 @@ class GraphService:
                 f"{path_addresses[i]}{path_addresses[i + 1]}".encode()
             ).hexdigest()[:16]
 
-            edges.append(GraphEdge(
-                id=f"path_edge_{edge_id}",
-                source=path_addresses[i].lower(),
-                target=path_addresses[i + 1].lower(),
-                amount=round(__import__("random").uniform(0.5, 50.0), 4),
-                amount_usd=round(__import__("random").uniform(100, 50000), 2),
-                token="ETH",
-                label=f"Step {i + 1}",
-            ))
+            edges.append(
+                GraphEdge(
+                    id=f"path_edge_{edge_id}",
+                    source=path_addresses[i].lower(),
+                    target=path_addresses[i + 1].lower(),
+                    amount=round(__import__("random").uniform(0.5, 50.0), 4),
+                    amount_usd=round(__import__("random").uniform(100, 50000), 2),
+                    token="ETH",
+                    label=f"Step {i + 1}",
+                )
+            )
 
         return GraphData(
             nodes=list(nodes.values()),

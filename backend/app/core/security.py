@@ -1,10 +1,10 @@
 """Security utilities: JWT tokens, password hashing, and RBAC."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
 
 from app.config import get_settings
@@ -63,7 +63,7 @@ def create_access_token(
         Encoded JWT token string.
     """
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (
+    expire = datetime.now(UTC) + (
         expires_delta or timedelta(minutes=settings.jwt_access_token_expire_minutes)
     )
     to_encode.update({"exp": expire, "type": "access"})
@@ -80,7 +80,7 @@ def create_refresh_token(data: dict[str, Any]) -> str:
         Encoded JWT refresh token string.
     """
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.jwt_refresh_token_expire_days)
+    expire = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
     to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 

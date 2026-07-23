@@ -5,15 +5,15 @@ from typing import Any
 import httpx
 
 from app.config import get_settings
-from app.schemas.report import AIChatResponse
 from app.core.logging import get_logger
+from app.schemas.report import AIChatResponse
 
 logger = get_logger(__name__)
 settings = get_settings()
 
 
 # System prompt for the AML investigator
-AML_SYSTEM_PROMPT = """You are ChainSentinel AI Investigator — an expert AML (Anti-Money Laundering) 
+AML_SYSTEM_PROMPT = """You are ChainSentinel AI Investigator — an expert AML (Anti-Money Laundering)
 analyst specializing in blockchain forensics and cryptocurrency compliance.
 
 Your capabilities:
@@ -234,9 +234,7 @@ class AIInvestigator:
         data = response.json()
         return data["message"]["content"]
 
-    def _generate_fallback_response(
-        self, message: str, context: dict[str, Any] | None
-    ) -> str:
+    def _generate_fallback_response(self, message: str, context: dict[str, Any] | None) -> str:
         """Generate a structured response without LLM when API is unavailable."""
         msg_lower = message.lower()
         risk_score = context.get("risk_score", 0) if context else 0
@@ -259,25 +257,25 @@ class AIInvestigator:
 
         if "sar" in msg_lower or "report" in msg_lower:
             return (
-                f"## SAR Generation\n\n"
-                f"To generate a Suspicious Activity Report, use the Report Generation feature.\n"
-                f"The SAR will include:\n"
-                f"- Subject identification\n"
-                f"- Suspicious activity description with evidence\n"
-                f"- Transaction timeline and amounts\n"
-                f"- Risk factor analysis\n"
-                f"- Recommended actions"
+                "## SAR Generation\n\n"
+                "To generate a Suspicious Activity Report, use the Report Generation feature.\n"
+                "The SAR will include:\n"
+                "- Subject identification\n"
+                "- Suspicious activity description with evidence\n"
+                "- Transaction timeline and amounts\n"
+                "- Risk factor analysis\n"
+                "- Recommended actions"
             )
 
         return (
-            f"## Analysis Summary\n\n"
-            f"Based on the available data, I can assist with:\n"
-            f"- **Risk explanation**: Understanding why a score was assigned\n"
-            f"- **Transaction analysis**: Identifying suspicious patterns\n"
-            f"- **Sanctions exposure**: Checking connections to sanctioned entities\n"
-            f"- **Report generation**: Creating SAR narratives and executive summaries\n"
-            f"- **Investigation guidance**: Recommending next steps\n\n"
-            f"Please ask a specific question about the analysis results."
+            "## Analysis Summary\n\n"
+            "Based on the available data, I can assist with:\n"
+            "- **Risk explanation**: Understanding why a score was assigned\n"
+            "- **Transaction analysis**: Identifying suspicious patterns\n"
+            "- **Sanctions exposure**: Checking connections to sanctioned entities\n"
+            "- **Report generation**: Creating SAR narratives and executive summaries\n"
+            "- **Investigation guidance**: Recommending next steps\n\n"
+            "Please ask a specific question about the analysis results."
         )
 
     def _generate_fallback_summary(self, data: dict[str, Any]) -> str:
@@ -314,9 +312,7 @@ class AIInvestigator:
             f"Please configure OpenAI API key or Ollama in settings.*"
         )
 
-    def _generate_suggestions(
-        self, message: str, context: dict[str, Any] | None
-    ) -> list[str]:
+    def _generate_suggestions(self, message: str, context: dict[str, Any] | None) -> list[str]:
         """Generate follow-up question suggestions."""
         return [
             "Why is the risk score this level?",

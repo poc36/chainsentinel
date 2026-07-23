@@ -2,7 +2,7 @@
 
 import time
 import uuid
-from typing import Any
+from typing import ClassVar
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -50,8 +50,8 @@ class RequestTimingMiddleware(BaseHTTPMiddleware):
 class AuditLogMiddleware(BaseHTTPMiddleware):
     """Middleware that logs write operations for audit trail."""
 
-    AUDITED_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
-    SKIP_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
+    AUDITED_METHODS: ClassVar[set[str]] = {"POST", "PUT", "PATCH", "DELETE"}
+    SKIP_PATHS: ClassVar[set[str]] = {"/health", "/docs", "/openapi.json", "/redoc"}
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Log write operations for audit purposes.
@@ -63,10 +63,7 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
         Returns:
             HTTP response (unchanged).
         """
-        if (
-            request.method in self.AUDITED_METHODS
-            and request.url.path not in self.SKIP_PATHS
-        ):
+        if request.method in self.AUDITED_METHODS and request.url.path not in self.SKIP_PATHS:
             client_ip = request.client.host if request.client else "unknown"
             logger.info(
                 "audit_log",

@@ -91,9 +91,7 @@ class BlockchainProvider(ABC):
     """
 
     @abstractmethod
-    async def get_address_info(
-        self, address: str, chain: Chain
-    ) -> ProviderAddressInfo:
+    async def get_address_info(self, address: str, chain: Chain) -> ProviderAddressInfo:
         """Fetch address information from the blockchain.
 
         Args:
@@ -127,9 +125,7 @@ class BlockchainProvider(ABC):
         ...
 
     @abstractmethod
-    async def get_token_balances(
-        self, address: str, chain: Chain
-    ) -> list[TokenBalance]:
+    async def get_token_balances(self, address: str, chain: Chain) -> list[TokenBalance]:
         """Fetch token balances for an address.
 
         Args:

@@ -6,7 +6,7 @@ The same address always produces the same data — crucial for testing and demos
 
 import hashlib
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from app.domain.blockchain import Chain, get_chain_info
@@ -16,7 +16,6 @@ from app.providers.base import (
     ProviderTransaction,
     TokenBalance,
 )
-
 
 # Mock USD prices for demo
 DEMO_PRICES: dict[Chain, Decimal] = {
@@ -111,12 +110,9 @@ class DemoProvider(BlockchainProvider):
     This enables consistent testing and demo presentations.
     """
 
-    async def get_address_info(
-        self, address: str, chain: Chain
-    ) -> ProviderAddressInfo:
+    async def get_address_info(self, address: str, chain: Chain) -> ProviderAddressInfo:
         """Generate synthetic address info based on address hash."""
         rng = _addr_rng(address)
-        chain_info = get_chain_info(chain)
         price = DEMO_PRICES.get(chain, Decimal("1.0"))
 
         # Generate balance based on address characteristics
@@ -138,10 +134,8 @@ class DemoProvider(BlockchainProvider):
 
         tx_count = rng.randint(5, 2000)
         days_active = rng.randint(30, 1800)
-        first_seen = datetime.now(timezone.utc) - timedelta(days=days_active)
-        last_seen = datetime.now(timezone.utc) - timedelta(
-            hours=rng.randint(1, 72)
-        )
+        first_seen = datetime.now(UTC) - timedelta(days=days_active)
+        last_seen = datetime.now(UTC) - timedelta(hours=rng.randint(1, 72))
 
         token_balances = await self.get_token_balances(address, chain)
 
@@ -173,7 +167,7 @@ class DemoProvider(BlockchainProvider):
         is_evm = chain_info.is_evm
         counterparties = EVM_COUNTERPARTIES if is_evm else BTC_COUNTERPARTIES
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for i in range(min(limit, 50)):
             is_outgoing = rng.random() < 0.45
@@ -200,9 +194,7 @@ class DemoProvider(BlockchainProvider):
             else:
                 token = native
 
-            tx_hash = hashlib.sha256(
-                f"{address}{i}{offset}{counterparty}".encode()
-            ).hexdigest()
+            tx_hash = hashlib.sha256(f"{address}{i}{offset}{counterparty}".encode()).hexdigest()
             if is_evm:
                 tx_hash = "0x" + tx_hash
 
@@ -231,9 +223,7 @@ class DemoProvider(BlockchainProvider):
         transactions.sort(key=lambda t: t.block_time or now, reverse=True)
         return transactions
 
-    async def get_token_balances(
-        self, address: str, chain: Chain
-    ) -> list[TokenBalance]:
+    async def get_token_balances(self, address: str, chain: Chain) -> list[TokenBalance]:
         """Generate synthetic token balances."""
         rng = _addr_rng(address + "tokens")
         tokens_pool = CHAIN_TOKENS.get(chain, [])

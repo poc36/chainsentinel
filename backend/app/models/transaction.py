@@ -1,7 +1,7 @@
 """Transaction model for storing blockchain transactions."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, Numeric, String
@@ -34,9 +34,7 @@ class Transaction(Base):
 
     __tablename__ = "transactions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tx_hash: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     chain: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
 
@@ -57,16 +55,14 @@ class Transaction(Base):
 
     # Block info
     block_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    block_time: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    block_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Status
     status: Mapped[str] = mapped_column(String(50), default="confirmed")
     tx_type: Mapped[str] = mapped_column(String(50), default="transfer")
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships

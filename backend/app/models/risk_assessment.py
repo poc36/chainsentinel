@@ -1,9 +1,9 @@
 """Risk assessment model for storing AML risk scoring results."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,18 +30,14 @@ class RiskAssessment(Base):
 
     __tablename__ = "risk_assessments"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     address_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("addresses.id"), nullable=False, index=True
     )
 
     # Risk scoring
     overall_score: Mapped[int] = mapped_column(Integer, default=0)
-    risk_level: Mapped[str] = mapped_column(
-        String(50), default="minimal", index=True
-    )
+    risk_level: Mapped[str] = mapped_column(String(50), default="minimal", index=True)
     factor_scores: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     explanation: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
@@ -57,7 +53,7 @@ class RiskAssessment(Base):
     ml_cluster_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     assessed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships

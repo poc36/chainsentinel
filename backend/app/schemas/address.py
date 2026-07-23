@@ -96,6 +96,7 @@ class AddressFullAnalysis(BaseModel):
 
 # ---- Risk schemas ----
 
+
 class RiskFactorScore(BaseModel):
     """Individual risk factor score."""
 
@@ -121,6 +122,7 @@ class RiskScoreResponse(BaseModel):
 
 
 # ---- Behavior schemas ----
+
 
 class BehaviorFlag(BaseModel):
     """Detected behavioral pattern."""
@@ -149,6 +151,7 @@ class BehaviorAnalysisResponse(BaseModel):
 
 
 # ---- ML schemas ----
+
 
 class MLAnalysisResponse(BaseModel):
     """Machine learning analysis result."""

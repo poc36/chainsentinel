@@ -1,9 +1,9 @@
 """Provider factory for creating blockchain data providers."""
 
 from app.config import get_settings
+from app.core.logging import get_logger
 from app.providers.base import BlockchainProvider
 from app.providers.demo_provider import DemoProvider
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 

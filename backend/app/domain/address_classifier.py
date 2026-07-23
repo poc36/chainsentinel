@@ -1,6 +1,7 @@
 """Address type classification logic."""
 
 from dataclasses import dataclass
+
 from app.domain.blockchain import Chain
 
 

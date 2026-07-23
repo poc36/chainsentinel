@@ -1,10 +1,10 @@
 """Neo4j driver configuration for graph database operations."""
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Any
 
-from neo4j import AsyncGraphDatabase, AsyncDriver, AsyncSession
+from neo4j import AsyncDriver, AsyncGraphDatabase, AsyncSession
 
 from app.config import get_settings
 from app.core.logging import get_logger

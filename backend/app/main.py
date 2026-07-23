@@ -1,16 +1,16 @@
 """FastAPI application factory and lifespan management."""
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 
+from app.api.middleware import AuditLogMiddleware, RequestTimingMiddleware
+from app.api.v1.router import api_router
 from app.config import get_settings
 from app.core.logging import setup_logging
-from app.api.v1.router import api_router
-from app.api.middleware import AuditLogMiddleware, RequestTimingMiddleware
 
 
 @asynccontextmanager
@@ -20,10 +20,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_logging(settings.log_level)
 
     # Import here to avoid circular imports
-    from app.core.database import engine
+    from app.core.database import Base, engine
     from app.core.redis import redis_client
 
     # Startup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
 
     # Shutdown

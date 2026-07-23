@@ -1,9 +1,9 @@
 """Dashboard analytics service."""
 
-import hashlib
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
+from app.core.logging import get_logger
 from app.schemas.report import (
     ActivityDataPoint,
     DashboardData,
@@ -12,7 +12,6 @@ from app.schemas.report import (
     RiskDistribution,
     TopWallet,
 )
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -52,15 +51,17 @@ class DashboardService:
         )
 
         # Daily activity (last 30 days)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         daily_activity = []
         for i in range(30):
             date = now - timedelta(days=29 - i)
-            daily_activity.append(ActivityDataPoint(
-                timestamp=date.strftime("%Y-%m-%d"),
-                value=float(rng.randint(50, 500)),
-                label=date.strftime("%b %d"),
-            ))
+            daily_activity.append(
+                ActivityDataPoint(
+                    timestamp=date.strftime("%Y-%m-%d"),
+                    value=float(rng.randint(50, 500)),
+                    label=date.strftime("%b %d"),
+                )
+            )
 
         # Hourly activity
         hourly_activity = [
@@ -139,11 +140,13 @@ class DashboardService:
         volume_history = []
         for i in range(30):
             date = now - timedelta(days=29 - i)
-            volume_history.append(ActivityDataPoint(
-                timestamp=date.strftime("%Y-%m-%d"),
-                value=round(rng.uniform(1_000_000, 50_000_000), 2),
-                label=date.strftime("%b %d"),
-            ))
+            volume_history.append(
+                ActivityDataPoint(
+                    timestamp=date.strftime("%Y-%m-%d"),
+                    value=round(rng.uniform(1_000_000, 50_000_000), 2),
+                    label=date.strftime("%b %d"),
+                )
+            )
 
         # Recent alerts
         recent_alerts = [

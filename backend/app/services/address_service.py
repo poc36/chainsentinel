@@ -1,19 +1,19 @@
 """Address analysis service — core analysis pipeline."""
 
-from datetime import datetime, timezone
-from decimal import Decimal
 from collections import Counter
+from datetime import UTC, datetime
+from decimal import Decimal
+from typing import Any
 
-from app.domain.blockchain import Chain, detect_chain, validate_address, get_chain_info
+from app.core.logging import get_logger
 from app.domain.address_classifier import classify_address
+from app.domain.blockchain import Chain, detect_chain, validate_address
 from app.providers.base import ProviderTransaction
 from app.providers.factory import get_provider
 from app.schemas.address import (
-    AddressFullAnalysis,
     AddressProfileResponse,
     TransactionResponse,
 )
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -74,7 +74,6 @@ class AddressService:
         activity = self._compute_activity_patterns(transactions)
 
         # Step 6: Build profile
-        chain_info = get_chain_info(chain)
         total_tx = addr_info.tx_count
 
         profile = AddressProfileResponse(
@@ -101,7 +100,7 @@ class AddressService:
             activity_trend=activity["trend"],
             label=classification.label,
             entity_type=classification.address_type,
-            analyzed_at=datetime.now(timezone.utc),
+            analyzed_at=datetime.now(UTC),
         )
 
         logger.info(
@@ -117,7 +116,7 @@ class AddressService:
         self,
         address: str,
         transactions: list[ProviderTransaction],
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Compute transaction statistics.
 
         Args:
@@ -151,16 +150,14 @@ class AddressService:
             if t.to_address.lower() != addr_lower:
                 counterparties.add(t.to_address.lower())
 
-        avg_value = (
-            sum(all_amounts) / len(all_amounts) if all_amounts else Decimal("0")
-        )
+        avg_value = sum(all_amounts) / len(all_amounts) if all_amounts else Decimal("0")
         max_value = max(all_amounts) if all_amounts else Decimal("0")
         min_value = min(all_amounts) if all_amounts else Decimal("0")
 
         # Estimate average holding time
         holding_times: list[float] = []
         sorted_txs = sorted(
-            transactions, key=lambda t: t.block_time or datetime.min.replace(tzinfo=timezone.utc)
+            transactions, key=lambda t: t.block_time or datetime.min.replace(tzinfo=UTC)
         )
         for i in range(len(sorted_txs) - 1):
             if sorted_txs[i].block_time and sorted_txs[i + 1].block_time:
@@ -174,16 +171,12 @@ class AddressService:
         )
 
         # Balance change over last 30 days
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         recent_in = sum(
-            t.amount_usd
-            for t in incoming
-            if t.block_time and (now - t.block_time).days <= 30
+            t.amount_usd for t in incoming if t.block_time and (now - t.block_time).days <= 30
         )
         recent_out = sum(
-            t.amount_usd
-            for t in outgoing
-            if t.block_time and (now - t.block_time).days <= 30
+            t.amount_usd for t in outgoing if t.block_time and (now - t.block_time).days <= 30
         )
         balance_change = recent_in - recent_out
 
@@ -201,7 +194,7 @@ class AddressService:
     def _compute_activity_patterns(
         self,
         transactions: list[ProviderTransaction],
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Compute activity pattern analysis.
 
         Args:
@@ -233,14 +226,10 @@ class AddressService:
         active_days = [d for d, _ in day_counter.most_common(3)]
 
         # Activity trend
-        now = datetime.now(timezone.utc)
-        recent_txs = [
-            t for t in transactions
-            if t.block_time and (now - t.block_time).days <= 30
-        ]
+        now = datetime.now(UTC)
+        recent_txs = [t for t in transactions if t.block_time and (now - t.block_time).days <= 30]
         older_txs = [
-            t for t in transactions
-            if t.block_time and 30 < (now - t.block_time).days <= 60
+            t for t in transactions if t.block_time and 30 < (now - t.block_time).days <= 60
         ]
 
         if len(recent_txs) > len(older_txs) * 1.2:

@@ -1,9 +1,9 @@
 """Report model for generated PDF investigation reports."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,28 +26,18 @@ class Report(Base):
 
     __tablename__ = "reports"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     investigation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("investigations.id"), nullable=False
     )
-    report_type: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="full"
-    )
-    status: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="pending"
-    )
+    report_type: Mapped[str] = mapped_column(String(50), nullable=False, default="full")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     content: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    generated_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
-    generated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    generated_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    generated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships

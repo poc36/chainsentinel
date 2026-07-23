@@ -1,8 +1,8 @@
 """Blockchain network definitions, address validation, and chain detection."""
 
 import re
-from enum import StrEnum
 from dataclasses import dataclass
+from enum import StrEnum
 
 
 class Chain(StrEnum):
@@ -164,34 +164,28 @@ def detect_chain(address: str) -> Chain | None:
         return None
 
     # Tron: T prefix + 33 chars
-    if address.startswith("T") and len(address) == 34:
-        if validate_address(address, Chain.TRON):
-            return Chain.TRON
+    if address.startswith("T") and len(address) == 34 and validate_address(address, Chain.TRON):
+        return Chain.TRON
 
     # Bitcoin: 1xx, 3xx, bc1xx
-    if address.startswith(("1", "3", "bc1")):
-        if validate_address(address, Chain.BITCOIN):
-            return Chain.BITCOIN
+    if address.startswith(("1", "3", "bc1")) and validate_address(address, Chain.BITCOIN):
+        return Chain.BITCOIN
 
     # Litecoin: L, M, ltc1
-    if address.startswith(("L", "M", "ltc1")):
-        if validate_address(address, Chain.LITECOIN):
-            return Chain.LITECOIN
+    if address.startswith(("L", "M", "ltc1")) and validate_address(address, Chain.LITECOIN):
+        return Chain.LITECOIN
 
     # Dogecoin: D prefix
-    if address.startswith("D") and len(address) == 34:
-        if validate_address(address, Chain.DOGECOIN):
-            return Chain.DOGECOIN
+    if address.startswith("D") and len(address) == 34 and validate_address(address, Chain.DOGECOIN):
+        return Chain.DOGECOIN
 
     # EVM chains: 0x prefix — default to Ethereum
-    if address.startswith("0x") and len(address) == 42:
-        if validate_address(address, Chain.ETHEREUM):
-            return Chain.ETHEREUM
+    if address.startswith("0x") and len(address) == 42 and validate_address(address, Chain.ETHEREUM):
+        return Chain.ETHEREUM
 
     # Solana: base58, 32-44 chars (checked last)
-    if 32 <= len(address) <= 44 and not address.startswith("0x"):
-        if validate_address(address, Chain.SOLANA):
-            return Chain.SOLANA
+    if 32 <= len(address) <= 44 and not address.startswith("0x") and validate_address(address, Chain.SOLANA):
+        return Chain.SOLANA
 
     return None
 

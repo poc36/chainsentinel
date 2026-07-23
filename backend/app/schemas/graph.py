@@ -1,6 +1,7 @@
 """Graph visualization schemas."""
 
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 
